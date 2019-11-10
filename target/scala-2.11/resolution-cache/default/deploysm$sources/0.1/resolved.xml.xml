@@ -4,7 +4,7 @@
 		module="deploysm$sources"
 		revision="0.1"
 		status="integration"
-		publication="20191110191212"
+		publication="20191110201025"
 	/>
 	<configurations>
 		<conf name="compile" visibility="public" description=""/>

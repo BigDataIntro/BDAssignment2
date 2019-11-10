@@ -7,7 +7,7 @@
 		revision="0.1"
 		conf="compile"
 		confs="default, compile, runtime, test, provided, optional"
-		date="20191110191210"/>
+		date="20191110201023"/>
 	<dependencies>
 		<module organisation="com.github.gseitz" name="sbt-protobuf">
 			<revision name="0.6.5" status="release" pubdate="20190718104810" resolver="sbt-chain" artresolver="sbt-chain" extra-scalaVersion="2.12" extra-sbtVersion="1.0" downloaded="false" searched="false" default="false" conf="compile, default(compile)" position="65">
