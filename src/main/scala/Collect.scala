@@ -19,8 +19,8 @@ object Collect extends App {
 /** Pull live tweets and filter them for tweets in the chosen cluster */
 object Collector {
   def doIt(options: CollectOptions, sc: SparkContext, ssc: StreamingContext) {
-    val tweetStream: DStream[String] = TwitterUtils.createStream(ssc, maybeTwitterAuth)
-      .map(new Gson().toJson(_))
+
+    val tweetStream: DStream[String] = ssc.socketTextStream("10.91.66.168",8989).map(new Gson().toJson(_))
 
     var numTweetsCollected = 0L
     tweetStream.foreachRDD { (rdd, time) =>
