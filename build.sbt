@@ -15,7 +15,8 @@ libraryDependencies ++= {
     "com.google.code.gson" %  "gson"                    % "2.8.0"  withSources(),
     "org.twitter4j"        %  "twitter4j-core"          % "4.0.5"  withSources(),
     "com.github.acrisci"   %% "commander"               % "0.1.0"  withSources(),
-    "com.typesafe"         %  "config"                  % "1.2.1"  withSources()
+    "com.typesafe"         %  "config"                  % "1.2.1"  withSources(),
+
   )
 }
 
