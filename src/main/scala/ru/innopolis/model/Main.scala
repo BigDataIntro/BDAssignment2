@@ -50,13 +50,27 @@ object  Main extends App {
     printf("Accuracy: %f \n",evaluated1)
     println("Hello world!")
   }
-
+  def freq(sc:SparkContext, path:String): Unit ={
+    val f = sc.textFile(path)
+    // word count
+    val wc = f.flatMap(l => l.split(" ")).map(word => (word,1)).reduceByKey(_ + _)
+    // swap k,v to v,k to sort by word frequency
+    val wc_swap = wc.map(_.swap)
+    // sort keys by ascending=false (descending)
+    val hifreq_words = wc_swap.sortByKey(false,1)
+    hifreq_words.saveAsTextFile("freq_words")
+    // get an array of top 20 frequent words
+    val top10 = hifreq_words.take(10)
+    // convert array to RDD
+    val top10rdd = sc.parallelize(top10)
+    top10rdd.saveAsTextFile("freq_top10")
+  }
   override def main(args: Array[String]): Unit = {
     Run()
     val spark = SparkSession
       .builder
       .appName(getClass.getSimpleName.replace("$", ""))
-      .master("spark://172.19.0.2:7077")
+      .master("spark://172.21.0.2:7077")
       .getOrCreate()
 
     val sc: SparkContext = spark.sparkContext
@@ -73,15 +87,15 @@ object  Main extends App {
           val pw = new PrintWriter(fw)
           val pred = Model.predict(model, rdd.toDF("text"))
           pw.append(time.toString())
-          pw.append(" ")
+          pw.append(";")
           rdd.collect().foreach(pw.append)
-          pw.append(" ")
+          pw.append(";")
           pred.select("prediction").rdd.collect().foreach(c=>pw.append(c.toString()))
           pw.append("\n")
           pw.close()
         }
       })
-
+    freq(sc, "result.csv")
     ssc.start()
     ssc.awaitTermination()
 
