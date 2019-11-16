@@ -1,7 +1,7 @@
+import com.google.gson.Gson
 import org.apache.spark.sql.{SQLContext, SparkSession}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
-import ru.innopolis.model.Collect.getClass
 import ru.innopolis.model.Model
 
 object  Main extends App {
@@ -60,13 +60,27 @@ object  Main extends App {
       .getOrCreate()
 
     val sc: SparkContext = spark.sparkContext
-    val ssc = new StreamingContext(sc, Seconds(60))
+    val ssc = new StreamingContext(sc, Seconds(10))
 
-    val tweetStream = ssc.socketTextStream("10.91.66.168", 8989)
+    val tweetStream = ssc.socketTextStream("10.91.66.168", 8989)//.map(new Gson().toJson(_))
     val model = Model.load_model("data/models/logreg_model")
-    val predicted = tweetStream.foreachRDD(
-      (rdd) => {rdd.collect().foreach(println)}
-    )
+    import spark.implicits._
+    import java.io._
+    val predicted = tweetStream
+      .foreachRDD(foreachFunc = (rdd, time) => {
+        if (rdd.collect().length != 0) {
+          val fw = new FileWriter("result.csv", true)
+          val pw = new PrintWriter(fw)
+          val pred = Model.predict(model, rdd.toDF("text"))
+          pw.append(time.toString())
+          pw.append(" ")
+          rdd.collect().foreach(pw.append)
+          pw.append(" ")
+          pred.select("prediction").rdd.collect().foreach(c=>pw.append(c.toString()))
+          pw.append("\n")
+          pw.close()
+        }
+      })
 
     ssc.start()
     ssc.awaitTermination()
