@@ -1,8 +1,13 @@
+import java.io.{File, FileReader, FileWriter, PrintWriter}
+
 import com.google.gson.Gson
 import org.apache.spark.sql.{SQLContext, SparkSession}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import ru.innopolis.model.Model
+import java.nio.file._
+
+import scala.io.Source
 
 object  Main extends App {
   def Run()={
@@ -50,6 +55,12 @@ object  Main extends App {
     printf("Accuracy: %f \n",evaluated1)
     println("Hello world!")
   }
+  private def deleteFile(path: String) = {
+    val fileTemp = new File(path)
+    if (fileTemp.exists) {
+      fileTemp.delete()
+    }
+  }
   def freq(sc:SparkContext, path:String): Unit ={
     val f = sc.textFile(path)
     // word count
@@ -62,8 +73,10 @@ object  Main extends App {
     // get an array of top 20 frequent words
     val top10 = hifreq_words.take(10)
     // convert array to RDD
-    val top10rdd = sc.parallelize(top10)
-    top10rdd.saveAsTextFile("freq_top10")
+    // val top10rdd = sc.parallelize(top10)
+    //top10.saveAsTextFile("freq_top10")
+    deleteFile("freq_top10")
+    top10.foreach(d => Files.write(Paths.get("freq_top10"), (d._1 + " " + d._2 + "\n").getBytes, StandardOpenOption.CREATE, StandardOpenOption.APPEND))
   }
   override def main(args: Array[String]): Unit = {
     Run()
@@ -84,18 +97,23 @@ object  Main extends App {
       .foreachRDD(foreachFunc = (rdd, time) => {
         if (rdd.collect().length != 0) {
           val fw = new FileWriter("result.csv", true)
+          val tw = new FileWriter("text.csv", true)
           val pw = new PrintWriter(fw)
+          val rw = new PrintWriter(tw)
           val pred = Model.predict(model, rdd.toDF("text"))
           pw.append(time.toString())
-          pw.append(";")
+          pw.append(",")
           rdd.collect().foreach(pw.append)
-          pw.append(";")
+          rdd.collect().foreach(rw.append)
+          pw.append(",")
           pred.select("prediction").rdd.collect().foreach(c=>pw.append(c.toString()))
           pw.append("\n")
           pw.close()
+          rw.close()
+          freq(sc, "text.csv")
         }
       })
-    freq(sc, "result.csv")
+
     ssc.start()
     ssc.awaitTermination()
 
