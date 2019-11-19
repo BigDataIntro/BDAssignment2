@@ -39,7 +39,7 @@ object Model {
     hashingTF
   }
   def getClassifier()={
-    val clf = new LogisticRegression().setMaxIter(100).setRegParam(0.001)
+    val clf = new LogisticRegression().setMaxIter(100).setRegParam(0.05)
     clf
   }
   def getPipeline()={
